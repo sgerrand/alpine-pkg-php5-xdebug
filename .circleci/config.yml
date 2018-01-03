@@ -1,0 +1,48 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: docker:git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Create Docker volumes
+          command: |
+            docker create --name input --volume /home/builder/package alpine:3.7 /bin/true
+            docker create --name output --volume /packages alpine:3.7 /bin/true
+            docker cp ./APKBUILD input:/home/builder/package
+      - run:
+          name: Build packages
+          command: |
+            docker run --env RSA_PRIVATE_KEY="$RSA_PRIVATE_KEY" --env RSA_PRIVATE_KEY_NAME="$CIRCLE_PROJECT_USERNAME.rsa" \
+                       --volumes-from input --volumes-from output $CIRCLE_PROJECT_USERNAME/alpine-abuild:v6
+      - run:
+          name: Extract packages
+          command: |
+            mkdir -p packages
+            docker cp output:/packages/builder packages/
+      - run:
+          name: Test installing packages
+          command: |
+            cp $CIRCLE_PROJECT_USERNAME.rsa.pub /etc/apk/keys/$CIRCLE_PROJECT_USERNAME.rsa.pub
+            apk add --no-progress --update-cache --upgrade ./packages/builder/x86_64/php5-xdebug-*.apk
+      - run:
+          name: Test PHP module
+          command: |
+             apk add --no-cache --no-progress php5-cli
+             php5 -r 'ini_set("xdebug.halt_level", E_WARNING); strlen(); echo "Hi!\n";'
+      - run:
+          name: Remove Docker volumes
+          command: |
+            docker rm input
+            docker rm output
+          when: always
+      - store_artifacts:
+          destination: pkgs
+          path: packages
+      - persist_to_workspace:
+          root: .
+          paths:
+            - packages
+    working_directory: ~/alpine-pkg-php5-xdebug
