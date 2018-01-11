@@ -31,7 +31,13 @@ jobs:
           name: Test PHP module
           command: |
              apk add --no-cache --no-progress php5-cli
-             php5 -r 'ini_set("xdebug.halt_level", E_WARNING); strlen(); echo "Hi!\n";'
+             sed -i -e 's/^;zend/zend/' /etc/php5/conf.d/xdebug.ini
+             php5 -r 'class Test {
+                        static function fix_test($i) {
+                          echo xdebug_call_class()."::".xdebug_call_function()." is called at ".xdebug_call_file().":".xdebug_call_line();
+                        }
+                      };
+                      $ret = Test::fix_test("a test");' | grep -q '::{main} is called at Command line code:6'
       - run:
           name: Remove Docker volumes
           command: |
