@@ -26,7 +26,7 @@ jobs:
           name: Test installing packages
           command: |
             cp $CIRCLE_PROJECT_USERNAME.rsa.pub /etc/apk/keys/$CIRCLE_PROJECT_USERNAME.rsa.pub
-            apk add --no-progress --update-cache --upgrade ./packages/builder/x86_64/php5-xdebug-*.apk
+            apk add --no-cache --no-progress ./packages/builder/x86_64/php5-xdebug-*.apk
       - run:
           name: Test PHP module
           command: |
