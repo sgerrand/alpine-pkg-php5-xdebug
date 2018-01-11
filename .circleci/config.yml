@@ -16,7 +16,7 @@ jobs:
           name: Build packages
           command: |
             docker run --env RSA_PRIVATE_KEY="$RSA_PRIVATE_KEY" --env RSA_PRIVATE_KEY_NAME="$CIRCLE_PROJECT_USERNAME.rsa" \
-                       --volumes-from input --volumes-from output $CIRCLE_PROJECT_USERNAME/alpine-abuild:v6
+                       --volumes-from input --volumes-from output $CIRCLE_PROJECT_USERNAME/alpine-abuild:3.7
       - run:
           name: Extract packages
           command: |
